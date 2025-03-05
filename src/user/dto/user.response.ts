@@ -1,6 +1,7 @@
 import { Exclude, Expose } from "class-transformer";
 import { UserRole } from "../schema/user.schema";
 
+@Exclude()
 export class UserResponse {
     @Expose()
     id: string;
@@ -15,4 +16,6 @@ export class UserResponse {
 
     @Expose()
     roles: UserRole[];
+
+    refreshToken: string;
 }

@@ -6,7 +6,6 @@ import { Response } from 'express';
 import { User } from 'src/user/schema/user.schema';
 import { UserService } from 'src/user/user.service';
 import { TokenPayload } from './token-payload.interface';
-import { use } from 'passport';
 
 @Injectable()
 export class AuthService {
@@ -56,6 +55,20 @@ export class AuthService {
         })
     }
 
+    async logout(response: Response) {
+        
+        response.cookie('Authentication', '', {
+            httpOnly: true, 
+            secure: this.configService.getOrThrow<string>('NODE_ENV') === 'prod',
+            expires: new Date(0)
+        })
+        response.cookie('Refresh', '', {
+            httpOnly: true, 
+            secure: this.configService.getOrThrow<string>('NODE_ENV') === 'prod',
+            expires: new Date(0)
+        })
+    }
+
     async verifyUser(email: string, password: string) {
         try {
             
@@ -75,8 +88,8 @@ export class AuthService {
     async verifyUserRefreshToken(refreshToken: string, userId: string) {
         try {
             const user = await this.userService.getUser({_id: userId})
-
-            if (user.refreshToken && !(await compare(refreshToken, user.refreshToken))) {
+            
+            if (!user.refreshToken || !(await compare(refreshToken, user.refreshToken))) {
                 throw new UnauthorizedException()
             }
 
