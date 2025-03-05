@@ -1,7 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { User, UserRole } from "./schema/user.schema";
-import { Model, Types } from "mongoose";
+import { User } from "./schema/user.schema";
+import { FilterQuery, Model, UpdateQuery } from "mongoose";
 import { CreateUserRequest } from "./dto/create-user.request";
 import { hash } from "bcryptjs";
 
@@ -17,17 +17,17 @@ export class UserService {
         }).save()
     }
 
-    async findUserById(id: string): Promise<User> {
-        if (!Types.ObjectId.isValid(id)) {
-            throw new BadRequestException("Invalid user ID format");
-        }
-
-        const user = await this.userModel.findById(id)
+    async getUser(query: FilterQuery<User>) {
+        const user = await this.userModel.findOne(query)
 
         if(!user) {
             throw new NotFoundException("User not found")
         }
 
         return user
+    }
+
+    async updateUser(query: FilterQuery<User>, data: UpdateQuery<User>) {
+        return await this.userModel.findOneAndUpdate(query, data)
     }
 }
