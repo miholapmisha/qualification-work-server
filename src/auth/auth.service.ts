@@ -81,7 +81,7 @@ export class AuthService {
 
             return user
         } catch(err) {
-            throw new UnauthorizedException("Credential are not valid")
+            throw new UnauthorizedException("User with such email and password does not exist")
         }
     }
 

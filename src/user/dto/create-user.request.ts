@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsStrongPassword } from "class-validator";
+import { IsEmail, IsNotEmpty, IsStrongPassword } from "class-validator";
 import { UserRole } from "../schema/user.schema";
 
 export class CreateUserRequest {
