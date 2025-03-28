@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsStrongPassword } from "class-validator";
+import { IsArray, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsStrongPassword } from "class-validator";
 import { UserRole } from "../schema/user.schema";
 
 export class CreateUserRequest {
@@ -11,5 +11,8 @@ export class CreateUserRequest {
     @IsNotEmpty()
     name: string;
 
-    roles: undefined | UserRole[];
+    @IsOptional()
+    @IsArray()
+    @IsEnum(UserRole, { each: true })
+    roles?: UserRole[];
 }

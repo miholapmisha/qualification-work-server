@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Request, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Request, UseGuards } from "@nestjs/common";
 import { UserService } from "./user.service";
-import { CreateUserRequest } from "./dto/create-user.request";
 import { plainToInstance } from "class-transformer";
 import { UserResponse } from "./dto/user.response";
 import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guars";
 import { PageOptionsDto } from "src/pagination/dto/page-options.dto";
+import { CreateUserRequest } from "./dto/user.create-user-request";
+import { UpdateUserRequest } from "./dto/user.update-user-request";
 
 
 @Controller('user')
@@ -37,7 +38,14 @@ export class UserController {
     }
 
     @Delete(':id')
-    async deleteUser(@Param('id') id: string) {
-        await this.userService.deleteUser(id)
+    async deleteUser(@Param('id') _id: string) {
+        await this.userService.deleteUser({ _id })
+    }
+
+    @Put(':id')
+    async updateUser(@Param('id') _id: string, @Body() user: UpdateUserRequest) {
+        console.log("User: ", user)
+        console.log("Id: ", _id)
+        return plainToInstance(UserResponse, await this.userService.updateUser({ _id }, { $set: user }))
     }
 }

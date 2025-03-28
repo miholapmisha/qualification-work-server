@@ -1,12 +1,12 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { User } from "./schema/user.schema";
 import { FilterQuery, Model, UpdateQuery } from "mongoose";
-import { CreateUserRequest } from "./dto/create-user.request";
 import { hash } from "bcryptjs";
 import { PageOptionsDto } from "src/pagination/dto/page-options.dto";
 import { PageDto } from "src/pagination/dto/page.dto";
 import { PageMetaDto } from "src/pagination/dto/meta/page-meta.dto";
+import { CreateUserRequest } from "./dto/user.create-user-request";
 
 @Injectable()
 export class UserService {
@@ -14,6 +14,17 @@ export class UserService {
     constructor(@InjectModel(User.name) private readonly userModel: Model<User>) { }
 
     async createUser(data: CreateUserRequest) {
+
+        const userWithSuchEmail = await this.userModel.findOne({ email: data.email })
+        if (userWithSuchEmail) {
+            throw new BadRequestException("User with such email already exists")
+        }
+
+        const userWithSuchName = await this.userModel.findOne({ name: data.name })
+        if (userWithSuchName) {
+            throw new BadRequestException("User with such name already exists")
+        }
+
         await new this.userModel({
             ...data,
             password: await hash(data.password, 10)
@@ -47,11 +58,19 @@ export class UserService {
     }
 
     async updateUser(query: FilterQuery<User>, data: UpdateQuery<User>) {
-        return await this.userModel.findOneAndUpdate(query, data)
+        const updatedUser = await this.userModel.findOneAndUpdate(query, data, {
+            new: true,
+            lean: true
+        })
+        if (!updatedUser) {
+            throw new NotFoundException("User not found")
+        }
+
+        return updatedUser
     }
 
-    async deleteUser(id: string) {
-        const user = await this.userModel.findByIdAndDelete(id)
+    async deleteUser(query: FilterQuery<User>) {
+        const user = await this.userModel.findOneAndDelete(query)
 
         if (!user) {
             throw new NotFoundException('User not found')

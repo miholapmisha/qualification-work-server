@@ -27,7 +27,7 @@ export class CategoryController {
 
     @Put(':id')
     async updateCategory(@Param('id') _id, @Body() category: CategoryRequestEntity) {
-        return plainToInstance(CategoryResponse, await this.categoryService.updateCategory(_id, category))
+        return plainToInstance(CategoryResponse, await this.categoryService.updateCategory({ _id }, { $set: category }))
     }
 
 }

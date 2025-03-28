@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Category, CategoryType } from "./schema/category.schema";
-import { FilterQuery, Model } from "mongoose";
+import { FilterQuery, Model, UpdateQuery } from "mongoose";
 import { CategoryRequestEntity } from "./dto/category.request-entity";
 
 @Injectable()
@@ -69,19 +69,18 @@ export class CategoryService {
         return this.categoryModel.deleteOne(query)
     }
 
-    async updateCategory(_id: string, data: CategoryRequestEntity) {
-
-        const updatedCategory = await this.categoryModel.findByIdAndUpdate(
-            { _id },
-            data,
-            { new: true }
-        );
+    async updateCategory(query: FilterQuery<Category>, data: UpdateQuery<Category>) {
+        const updatedCategory = await this.categoryModel
+            .findOneAndUpdate(query, data, {
+                new: true,
+                lean: true 
+            });
 
         if (!updatedCategory) {
-            throw new NotFoundException(`Category with ID ${_id} not found`);
+            throw new NotFoundException("Category not found");
         }
 
-        return updatedCategory.toObject();
+        return updatedCategory;
     }
 
     async getCategoriesByFilter(query: FilterQuery<Category>) {
