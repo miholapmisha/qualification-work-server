@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Request, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Request, UseGuards, UseInterceptors } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { plainToInstance } from "class-transformer";
 import { UserResponse } from "./dto/user.response";
@@ -6,6 +6,7 @@ import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guars";
 import { PageOptionsDto } from "src/pagination/dto/page-options.dto";
 import { CreateUserRequest } from "./dto/user.create-user-request";
 import { UpdateUserRequest } from "./dto/user.update-user-request";
+import { ValidationUserCredentialsInterceptor } from "./interceptors/validation-user-credentials.interceptor";
 
 
 @Controller('user')
@@ -15,8 +16,10 @@ export class UserController {
     constructor(private readonly userService: UserService) { }
 
     @Post('create')
+    @UseInterceptors(ValidationUserCredentialsInterceptor)
     async createUser(@Body() createUserRequest: CreateUserRequest) {
-        await this.userService.createUser(createUserRequest)
+        console.log("Create user request: ", createUserRequest)
+        return plainToInstance(UserResponse, await this.userService.createUser(createUserRequest))
     }
 
     @Get('current')
@@ -43,9 +46,8 @@ export class UserController {
     }
 
     @Put(':id')
+    @UseInterceptors(ValidationUserCredentialsInterceptor)
     async updateUser(@Param('id') _id: string, @Body() user: UpdateUserRequest) {
-        console.log("User: ", user)
-        console.log("Id: ", _id)
         return plainToInstance(UserResponse, await this.userService.updateUser({ _id }, { $set: user }))
     }
 }

@@ -14,18 +14,7 @@ export class UserService {
     constructor(@InjectModel(User.name) private readonly userModel: Model<User>) { }
 
     async createUser(data: CreateUserRequest) {
-
-        const userWithSuchEmail = await this.userModel.findOne({ email: data.email })
-        if (userWithSuchEmail) {
-            throw new BadRequestException("User with such email already exists")
-        }
-
-        const userWithSuchName = await this.userModel.findOne({ name: data.name })
-        if (userWithSuchName) {
-            throw new BadRequestException("User with such name already exists")
-        }
-
-        await new this.userModel({
+        return await new this.userModel({
             ...data,
             password: await hash(data.password, 10)
         }).save()
