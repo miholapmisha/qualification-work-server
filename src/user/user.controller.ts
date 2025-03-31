@@ -17,8 +17,7 @@ export class UserController {
 
     @Post('create')
     @UseInterceptors(ValidationUserCredentialsInterceptor)
-    async createUser(@Body() createUserRequest: CreateUserRequest) {
-        console.log("Create user request: ", createUserRequest)
+    async createUser(@Body() createUserRequest: CreateUserRequest) {a
         return plainToInstance(UserResponse, await this.userService.createUser(createUserRequest))
     }
 
