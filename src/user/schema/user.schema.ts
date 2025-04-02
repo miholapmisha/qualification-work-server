@@ -26,6 +26,9 @@ export class User {
     @Prop({ type: [String], enum: UserRole, default: [UserRole.GUEST] })
     roles: UserRole[];
 
+    @Prop({ type: String, ref: 'Category' })
+    groupId?: string;
+
     @Prop()
     refreshToken?: string
 }

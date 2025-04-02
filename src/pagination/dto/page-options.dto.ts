@@ -19,4 +19,9 @@ export class PageOptionsDto {
     get skip(): number {
         return (this.page - 1) * this.take;
     }
+
+    constructor(page, take) {
+        this.page = page
+        this.take = take
+    }
 }
