@@ -25,14 +25,9 @@ export class UserController {
     }
 
     @Put('assign')
-    async assignUserToGroup(@Body() assignRequest: { userIds: string[]; groupId: string }) {
-        const { userIds, groupId } = assignRequest
-        const updatedUsers = await this.userService.updateUsers(
-            { _id: { $in: userIds } },
-            { $set: { groupId } }
-        );
-
-        return updatedUsers.map(user => plainToInstance(UserResponse, user));
+    async assignUserToGroup(@Body() assignRequest: { usersIds: string[]; groupId: string }) {
+        const { usersIds, groupId } = assignRequest
+        await this.userService.assignUsersToGroup(groupId, usersIds)
     }
 
 
@@ -81,35 +76,4 @@ export class UserController {
     async deleteUser(@Param('id') _id: string) {
         await this.userService.deleteUser({ _id })
     }
-
-    // private getUserFilterQuery = (searchParams: Partial<User>) => {
-    //     const findQuery: FilterQuery<User> = {};
-
-
-    //     if (searchParams.email && searchParams.email.trim() !== '') {
-    //         findQuery.email = { $regex: searchParams.email.trim(), $options: "i" }
-    //     }
-
-    //     if (searchParams.name && searchParams.name.trim() !== '') {
-    //         findQuery.name = { $regex: searchParams.name.trim(), $options: "i" }
-    //     }
-
-    //     if (searchParams.roles && !isArray(searchParams.roles)) {
-    //         searchParams.roles = [searchParams.roles]
-    //     }
-
-    //     if (searchParams.roles && Array.isArray(searchParams.roles) && searchParams.roles.length > 0) {
-    //         const validRoles = Object.values(UserRole);
-    //         const filteredRoles = searchParams.roles.filter((role) => validRoles.includes(role))
-    //         if (filteredRoles.length > 0) {
-    //             findQuery.roles = { $in: filteredRoles }
-    //         }
-    //     }
-
-    //     if (searchParams.groupId && searchParams.groupId.trim() !== '') {
-    //         findQuery.groupId = searchParams.groupId.trim()
-    //     }
-
-    //     return findQuery;
-    // };
 }

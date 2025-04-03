@@ -17,7 +17,7 @@ export class CategoryController {
 
     @Get()
     async getCategories(@Query() params: any) {
-        return await this.categoryService.getCategoriesByFilter(params)
+        return await this.categoryService.getCategoriesByParentId(params)
     }
 
     @Delete()

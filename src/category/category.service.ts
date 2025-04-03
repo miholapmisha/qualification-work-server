@@ -83,7 +83,7 @@ export class CategoryService {
         return updatedCategory;
     }
 
-    async getCategoriesByFilter(query: FilterQuery<Category>) {
+    async getCategoriesByParentId(query: FilterQuery<Category>) {
         const parentId = query.parentId
 
         if (parentId) {

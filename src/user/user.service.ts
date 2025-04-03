@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { User } from "./schema/user.schema";
 import { FilterQuery, Model, UpdateQuery } from "mongoose";
@@ -23,7 +23,7 @@ export class UserService {
         if (pageOptionsDto) {
             return this.paginationService.paginate(this.userModel, query, pageOptionsDto);
         } else {
-            return this.paginationService.getAll(this.userModel, query);
+            return this.userModel.find(query);
         }
     }
 
@@ -56,6 +56,34 @@ export class UserService {
         })
 
         return await this.userModel.find(query).lean()
+    }
+
+    async assignUsersToGroup(groupId: string, usersIds: string[]) {
+        const alreadyAssignedUsers = await this.userModel.findOne({
+            _id: { $in: usersIds },
+            $and: [
+                { groupId: { $exists: true, $ne: null } },
+                { groupId: { $ne: groupId } }
+            ]
+        });
+
+        if (alreadyAssignedUsers) {
+            throw new BadRequestException('Some users are already assigned to a group');
+        }
+
+        await this.userModel.updateMany(
+            {
+                $and: [
+                    { groupId },
+                    { _id: { $nin: usersIds } }
+                ]
+            },
+            { $unset: { groupId: '' } }
+        )
+        await this.userModel.updateMany(
+            { _id: { $in: usersIds } },
+            { $set: { groupId } }
+        )
     }
 
     async deleteUser(query: FilterQuery<User>) {
