@@ -1,6 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { FilterDto, FilterOperator } from "./dto/filtering.dto";
 import { FilterQuery } from "mongoose";
+import { plainToInstance } from "class-transformer";
+import { PageOptionsDto } from "src/pagination/dto/page-options.dto";
+import { PageDto } from "src/pagination/dto/page.dto";
 
 @Injectable()
 export class FilteringService {
@@ -72,5 +75,27 @@ export class FilteringService {
         };
     }
 
+    async search<T, R>(
+        searchParams: any,
+        pageParams: PageOptionsDto,
+        serviceMethod: (filterQuery: any, pageOptionsDto?: PageOptionsDto) => Promise<PageDto<T> | T[]>,
+        responseEntity: new (...args: any[]) => R
+    ): Promise<any> {
+        const { page, take } = pageParams;
+        const filterQuery = this.buildDynamicQuery<T>(searchParams);
+
+        if (page && take) {
+            const pageOptionsDto = new PageOptionsDto(page, take);
+            const paginatedResult = (await serviceMethod(filterQuery, pageOptionsDto)) as PageDto<T>;
+
+            return {
+                metaData: paginatedResult.metaData,
+                data: paginatedResult.data.map((item) => plainToInstance(responseEntity, item)),
+            };
+        } else {
+            const results = (await serviceMethod(filterQuery)) as T[];
+            return results.map((item) => plainToInstance(responseEntity, item));
+        }
+    }
 
 }

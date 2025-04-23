@@ -6,15 +6,24 @@ import { AuthModule } from './auth/auth.module';
 import { CategoryModule } from './category/category.module';
 import { PaginationModule } from './pagination/pagination.module';
 import { FilteringModule } from './filtering/filtering.module';
+import { SurveyModule } from './survey/survey.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }),
-  MongooseModule.forRootAsync({
-    useFactory: (configService: ConfigService) => ({
-      uri: configService.getOrThrow('MONGO_URI')
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    MongooseModule.forRootAsync({
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.getOrThrow('MONGO_URI'),
+      }),
+      inject: [ConfigService],
     }),
-    inject: [ConfigService]
-  }), UserModule, AuthModule, CategoryModule, PaginationModule, FilteringModule],
+    UserModule,
+    AuthModule,
+    CategoryModule,
+    PaginationModule,
+    FilteringModule,
+    SurveyModule,
+  ],
   controllers: [],
   providers: [],
 })

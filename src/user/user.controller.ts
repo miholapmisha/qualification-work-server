@@ -7,8 +7,6 @@ import { PageOptionsDto } from "src/pagination/dto/page-options.dto";
 import { CreateUserRequest } from "./dto/user.create-user-request";
 import { UpdateUserRequest } from "./dto/user.update-user-request";
 import { ValidationUserCredentialsInterceptor } from "./interceptors/validation-user-credentials.interceptor";
-import { PageDto } from "src/pagination/dto/page.dto";
-import { User } from "./schema/user.schema";
 import { FilteringService } from "src/filtering/filtering.service";
 
 
@@ -52,24 +50,14 @@ export class UserController {
         return plainToInstance(UserResponse, await this.userService.getUser({ groupId }))
     }
 
-    //TODO: simplify
     @Post('search')
     async getUsers(@Body() searchParams, @Query() pageParams: PageOptionsDto) {
-        const { page, take } = pageParams
-        const filterQuery = this.filteringService.buildDynamicQuery<User>(searchParams)
-
-        if (page && take) {
-            const pageOptionsDto = new PageOptionsDto(page, take)
-            const paginatedResult = await this.userService.searchUsers(filterQuery, pageOptionsDto) as PageDto<User>
-
-            return {
-                metaData: paginatedResult.metaData,
-                data: paginatedResult.data.map((user) => plainToInstance(UserResponse, user))
-            }
-        } else {
-            const users = await this.userService.searchUsers(filterQuery) as User[]
-            return users.map((user) => plainToInstance(UserResponse, user))
-        }
+        return await this.filteringService.search(
+            searchParams,
+            pageParams,
+            this.userService.searchUsers.bind(this.userService),
+            UserResponse
+        )
     }
 
     @Delete(':id')
