@@ -1,6 +1,8 @@
-import { Expose } from "class-transformer";
-import { Question, QuestionType } from "../types/question.types";
+import { Exclude, Expose } from "class-transformer";
+import { Question, QuestionType } from "../../types/question.types";
+import { SurveyStatus } from "../../schema/survey.schema";
 
+@Exclude()
 export class SurveyResponseEntity {
     @Expose()
     _id: string;
@@ -19,6 +21,9 @@ export class SurveyResponseEntity {
 
     @Expose()
     authorId: string;
+
+    @Expose()
+    status: SurveyStatus;
 
     @Expose()
     createdAt: Date;

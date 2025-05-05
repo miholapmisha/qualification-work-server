@@ -1,7 +1,8 @@
-import { IsNotEmpty, IsOptional, ValidateNested } from "class-validator";
-import { Question, } from "../types/question.types";
+import { IsNotEmpty, IsOptional } from "class-validator";
+import { Question, } from "../../types/question.types";
 
 export class SurveyRequestEntity {
+
     @IsNotEmpty()
     title: string;
 

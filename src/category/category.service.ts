@@ -132,4 +132,8 @@ export class CategoryService {
 
         return await this.categoryModel.find(query)
     }
+
+    async getCategories(query: FilterQuery<Category>) {
+        return await this.categoryModel.find(query);
+    }
 }

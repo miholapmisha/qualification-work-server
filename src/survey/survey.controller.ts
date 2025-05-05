@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, Inject, Param, Post, Put, Query } from "@nestjs/common";
-import { SurveyRequestEntity } from "./dto/survey.request-entity";
+import { SurveyRequestEntity } from "./dto/survey/survey.request-entity";
 import { SurveyService } from "./survey.service";
 import { PageOptionsDto } from "src/pagination/dto/page-options.dto";
 import { FilteringService } from "src/filtering/filtering.service";
-import { SurveyResponseEntity } from "./dto/survey.response";
+import { SurveyResponseEntity } from "./dto/survey/survey.response";
 import { plainToInstance } from "class-transformer";
 
 @Controller('survey')
@@ -19,7 +19,7 @@ export class SurveyController {
 
     @Put(':id')
     async updateSurvey(@Param('id') id: string, @Body() survey: SurveyRequestEntity) {
-        return plainToInstance(SurveyResponseEntity, await this.surveyService.updateSurvey({ _id: id }, survey))
+        return plainToInstance(SurveyResponseEntity, await this.surveyService.updateSurvey({ _id: id }, { $set: survey }))
     }
 
     @Post('create')

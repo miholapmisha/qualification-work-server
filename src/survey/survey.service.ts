@@ -1,8 +1,8 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Survey } from "./schema/survey.schema";
-import { SurveyRequestEntity } from "./dto/survey.request-entity";
-import { FilterQuery, Model } from "mongoose";
+import { Survey, SurveyStatus } from "./schema/survey.schema";
+import { SurveyRequestEntity } from "./dto/survey/survey.request-entity";
+import { FilterQuery, Model, UpdateQuery } from "mongoose";
 import { PageOptionsDto } from "src/pagination/dto/page-options.dto";
 import { PaginationService } from "src/pagination/pagination.service";
 
@@ -25,8 +25,6 @@ export class SurveyService {
 
     async getSurvey(query: FilterQuery<Survey>) {
         const survey = await this.surveyModel.findOne(query)
-        console.log("query", query)
-        console.log("updatedSurvey", survey)
 
         if (!survey) {
             throw new NotFoundException("Survey not found")
@@ -35,14 +33,18 @@ export class SurveyService {
         return survey
     }
 
-    async updateSurvey(query: FilterQuery<Survey>, survey: SurveyRequestEntity) {
-        const updatedSurvey = await this.surveyModel.findOneAndUpdate(query, survey, { new: true })
+    async changeSurveyStatus(query: FilterQuery<Survey>, status: SurveyStatus) {
+        return await this.surveyModel.findOneAndUpdate(query, { $set: { status } })
+    }
+
+    async updateSurvey(query: FilterQuery<Survey>, data: UpdateQuery<Survey>) {
+        const updatedSurvey = await this.surveyModel.findOneAndUpdate(query, data, { new: true })
 
         if (!updatedSurvey) {
             throw new NotFoundException("Survey not found")
         }
 
-        if (updatedSurvey.assigned) {
+        if (updatedSurvey.status === "published") {
             throw new BadRequestException("Unable to modify survey, survey is already assigned")
         }
 
@@ -56,7 +58,7 @@ export class SurveyService {
             throw new NotFoundException("Survey not found")
         }
 
-        if (deletedSurvey.assigned) {
+        if (deletedSurvey.status === "published") {
             throw new BadRequestException("Unable to delete survey, survey is already assigned")
         }
 

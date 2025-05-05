@@ -2,7 +2,7 @@ import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { SchemaTypes, Types } from 'mongoose';
 import { Question, QuestionType } from '../types/question.types';
 
-enum SurveyStatus {
+export enum SurveyStatus {
     IN_PROGRESS = 'in_progress',
     PUBLISHED = 'published',
 }
@@ -56,13 +56,8 @@ export class Survey {
         required: true,
         ref: 'User'
     })
+    
     authorId: Types.ObjectId;
-
-    @Prop({type: Boolean, default: false})
-    assigned?: boolean;
-
-    @Prop({ type: Date, default: Date.now })
-    createdAt: Date;
 }
 
 export const SurveySchema = SchemaFactory.createForClass(Survey);
