@@ -1,10 +1,12 @@
-import { Body, Controller, Delete, Get, Inject, Param, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Inject, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
 import { CategoryRequestEntity } from "./dto/category.request-entity";
 import { CategoryService } from "./category.service";
 import { plainToInstance } from "class-transformer";
 import { CategoryResponse } from "./dto/category.response";
+import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guars";
 
 @Controller('category')
+@UseGuards(JwtAuthGuard)
 export class CategoryController {
 
     constructor(@Inject() private readonly categoryService: CategoryService) { }
@@ -20,9 +22,14 @@ export class CategoryController {
         return await this.categoryService.getCategoriesByParentId(params)
     }
 
+    @Get('group-tree')
+    async getGroupCategoriesTree() {
+        return await this.categoryService.getGroupCategoriesTree()
+    }
+
     @Delete()
     async deleteCategory(@Query() params: any) {
-        await this.categoryService.deteleteCategory(params)
+        await this.categoryService.deleteCategory(params)
     }
 
     @Put(':id')

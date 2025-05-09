@@ -33,8 +33,8 @@ export class SurveyService {
         return survey
     }
 
-    async changeSurveyStatus(query: FilterQuery<Survey>, status: SurveyStatus) {
-        return await this.surveyModel.findOneAndUpdate(query, { $set: { status } })
+    async changeSurveysStatus(query: FilterQuery<Survey>, status: SurveyStatus) {
+        return await this.surveyModel.updateMany(query, { $set: { status } })
     }
 
     async updateSurvey(query: FilterQuery<Survey>, data: UpdateQuery<Survey>) {

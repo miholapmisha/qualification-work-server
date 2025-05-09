@@ -1,9 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Category, CategoryType } from "./schema/category.schema";
 import { FilterQuery, Model, UpdateQuery } from "mongoose";
 import { CategoryRequestEntity } from "./dto/category.request-entity";
 import { UserService } from "src/user/user.service";
+import { SurveyAssignmentService } from "src/survey/survey-assignment.service";
+import { User } from "src/user/schema/user.schema";
+import { SurveyService } from "src/survey/survey.service";
+import { SurveyStatus } from "src/survey/schema/survey.schema";
+import { SurveyAssignment } from "src/survey/schema/survey-assignment.schema";
 
 @Injectable()
 export class CategoryService {
@@ -19,7 +24,12 @@ export class CategoryService {
         [CategoryType.GROUP]: null
     };
 
-    constructor(@InjectModel(Category.name) private readonly categoryModel: Model<Category>, private readonly userService: UserService) { }
+    constructor(
+        @InjectModel(Category.name) private readonly categoryModel: Model<Category>,
+        @Inject() private readonly userService: UserService,
+        @Inject() private readonly surveyAssignmentService: SurveyAssignmentService,
+        @Inject() private readonly surveyService: SurveyService
+    ) { }
 
     async addCategories(data: CategoryRequestEntity[]): Promise<Category[]> {
 
@@ -71,8 +81,7 @@ export class CategoryService {
         }
     }
 
-    async deteleteCategory(query: FilterQuery<Category>) {
-
+    async deleteCategory(query: FilterQuery<Category>) {
         const category = await this.categoryModel.findOne(query);
 
         if (!category) {
@@ -82,19 +91,36 @@ export class CategoryService {
         const categoriesToDelete = await this.categoryModel.find({
             path: { $regex: new RegExp(`${category._id}`) }
         });
+
         const groupIdsToRemove = categoriesToDelete
-            .filter(cat => cat.categoryType === CategoryType.GROUP)
-            .map(cat => cat._id);
+            .filter(category => category.categoryType === CategoryType.GROUP)
+            .map(category => category._id);
+
+        if (category.categoryType === CategoryType.GROUP) {
+            groupIdsToRemove.push(category._id)
+        }
 
         if (groupIdsToRemove.length > 0) {
+            const usersIds = (await this.userService.searchUsers({ groupId: { $in: groupIdsToRemove } }) as User[])
+                .map(user => user._id);
+
+            const assignedSurveys = await this.surveyAssignmentService.searchSurveyAssignments({ studentId: { $in: usersIds } }) as SurveyAssignment[]
+            await this.surveyAssignmentService.deleteSurveyAssigns({ studentId: { $in: usersIds } });
+
+
+            const surveyIdsToUpdate = assignedSurveys.map(assigns => assigns.survey._id)
+
+            if (surveyIdsToUpdate.length > 0) {
+                await this.surveyService.changeSurveysStatus({ _id: { $in: surveyIdsToUpdate } }, SurveyStatus.IN_PROGRESS);
+            }
+
             await this.userService.updateUsers(
-                { groupId: { $in: groupIdsToRemove } },
+                { _id: { $in: usersIds } },
                 { $unset: { groupId: '' } }
             );
         }
 
         await this.categoryModel.deleteMany({ path: { $regex: new RegExp(`${category._id}`) } });
-
         return this.categoryModel.deleteOne(query);
     }
 
@@ -131,6 +157,30 @@ export class CategoryService {
         }
 
         return await this.categoryModel.find(query)
+    }
+
+    async getGroupCategoriesTree() {
+        const groupCategories = await this.categoryModel.find({
+            categoryType: CategoryType.GROUP
+        })
+
+
+        const groupPaths = groupCategories.map(group => group.path);
+
+        const ancestorIds = new Set<string>();
+        groupPaths.forEach(path => {
+            if (path) {
+                const pathParts = path.split(this.defaultPathSeparator);
+                pathParts.forEach(id => ancestorIds.add(id));
+            }
+        });
+        groupCategories.forEach(group => ancestorIds.add(group._id));
+
+        const allRelevantCategories = await this.categoryModel.find({
+            _id: { $in: Array.from(ancestorIds) }
+        });
+
+        return allRelevantCategories;
     }
 
     async getCategories(query: FilterQuery<Category>) {

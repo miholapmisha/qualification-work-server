@@ -14,7 +14,6 @@ export class PaginationService {
     ): Promise<PageDto<T>> {
 
         const { take, skip } = pageOptionsDto;
-
         const [items, itemCount] = await Promise.all([
             model.find(query)
                 .skip(skip)

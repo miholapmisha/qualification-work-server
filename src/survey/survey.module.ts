@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Survey, SurveySchema } from './schema/survey.schema';
 import { FilteringModule } from 'src/filtering/filtering.module';
@@ -20,10 +20,10 @@ import { CategoryModule } from 'src/category/category.module';
         PaginationModule,
         FilteringModule,
         UserModule,
-        CategoryModule,
-        CategoryModule
+        forwardRef(() => CategoryModule)
     ],
     controllers: [SurveyController, SurveyAssignmentController],
     providers: [SurveyService, SurveyAssignmentService],
+    exports: [SurveyAssignmentService, SurveyService]
 })
 export class SurveyModule { }

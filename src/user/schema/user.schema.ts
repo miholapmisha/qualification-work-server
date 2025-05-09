@@ -34,3 +34,13 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User)
+
+UserSchema.virtual('group', {
+    ref: 'Category',
+    localField: 'groupId',
+    foreignField: '_id',
+    justOne: true,
+});
+
+UserSchema.set('toObject', { virtuals: true });
+UserSchema.set('toJSON', { virtuals: true });

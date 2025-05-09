@@ -1,8 +1,8 @@
 import { Type } from "class-transformer";
-import { ArrayMinSize, IsNotEmpty, ValidateNested } from "class-validator";
+import { ArrayMinSize, IsNotEmpty } from "class-validator";
 import { Survey } from "src/survey/schema/survey.schema";
 
-export class CategoriesSurveyAssignmentRequest {
+export class CategoriesSurveyAssignmentRequestEntity {
 
     @IsNotEmpty()
     @ArrayMinSize(1)

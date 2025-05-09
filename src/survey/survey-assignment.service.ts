@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, FilterQuery } from "mongoose";
 import { PageOptionsDto } from "src/pagination/dto/page-options.dto";
@@ -6,11 +6,12 @@ import { PaginationService } from "src/pagination/pagination.service";
 import { SurveyAssignment } from "./schema/survey-assignment.schema";
 import { SurveyAssignmentRequestEntity } from "./dto/survey-assign/survey-assignment.request-entity";
 import { UserService } from "src/user/user.service";
-import { CategoriesSurveyAssignmentRequest } from "./dto/survey-assign/categories-survey-assignment.request";
+import { CategoriesSurveyAssignmentRequestEntity } from "./dto/survey-assign/categories-survey-assignment.request-entity";
 import { SurveyService } from "./survey.service";
 import { SurveyStatus } from "./schema/survey.schema";
 import { CategoryService } from "src/category/category.service";
 import { CategoryType } from "src/category/schema/category.schema";
+import { AnswersEntity } from "./dto/survey-assign/answers.request-entity";
 
 @Injectable()
 export class SurveyAssignmentService {
@@ -20,7 +21,7 @@ export class SurveyAssignmentService {
         @Inject() private readonly paginationService: PaginationService,
         @Inject() private readonly userService: UserService,
         @Inject() private readonly surveyService: SurveyService,
-        @Inject() private readonly categoryService: CategoryService
+        @Inject(forwardRef(() => CategoryService)) private readonly categoryService: CategoryService
     ) { }
 
     async addSurveyAssignment(surveyAssignment: SurveyAssignmentRequestEntity): Promise<SurveyAssignment> {
@@ -45,7 +46,8 @@ export class SurveyAssignmentService {
         return assignment
     }
 
-    async assignByCategories(surveyAssignment: CategoriesSurveyAssignmentRequest): Promise<SurveyAssignment[]> {
+    async assignByCategories(surveyAssignment: CategoriesSurveyAssignmentRequestEntity): Promise<SurveyAssignment[]> {
+
         const groupCategories = await this.categoryService.getCategories({
             $and: [
                 {
@@ -73,19 +75,36 @@ export class SurveyAssignmentService {
             ancestorIds.has(id)
         );
 
-        console.log("Result length: ", validSelectedCategoryIds.length)
-        console.log("Result: ", validSelectedCategoryIds)
+        // console.log("Result length: ", validSelectedCategoryIds.length)
+        // console.log("Result: ", validSelectedCategoryIds)
 
         return await this.assignToUsersByGroup(surveyAssignment, groupCategories.map(category => category._id))
     }
 
-    private async assignToUsersByGroup(surveyAssignment: CategoriesSurveyAssignmentRequest, groupIds: string[]) {
+    async deleteSurveyAssigns(query: FilterQuery<SurveyAssignment>) {
+        return await this.surveyAssignmentModel.deleteMany(query)
+    }
+
+    async completeSurvey(surveyId: string, userId: string, answers: AnswersEntity) {
+        const query = { studentId: userId }
+        query['survey._id'] = surveyId
+        const assign = await this.surveyAssignmentModel.findOne(query)
+
+        if (assign?.answers) {
+            console.log("Assign answers: ", assign.answers)
+            throw new BadRequestException("Survey already completed")
+        }
+
+        return await this.surveyAssignmentModel.findOneAndUpdate(query, { $set: answers })
+    }
+
+    private async assignToUsersByGroup(surveyAssignment: CategoriesSurveyAssignmentRequestEntity, groupIds: string[]) {
         const surveyAssignments: SurveyAssignment[] = [];
         const users = await this.userService.searchUsers({ groupId: { $in: groupIds } })
         const userIds = Array.isArray(users) ? users.map(user => user._id) : [];
 
         if (userIds.length === 0) {
-            return [];
+            throw new BadRequestException('No users found under selected groups')
         }
 
         for (const userId of userIds) {
@@ -96,7 +115,7 @@ export class SurveyAssignmentService {
             surveyAssignments.push(surveyAssignmentData);
         }
 
-        await this.surveyService.changeSurveyStatus({ _id: surveyAssignment.survey._id }, SurveyStatus.PUBLISHED)
+        await this.surveyService.changeSurveysStatus({ _id: surveyAssignment.survey._id }, SurveyStatus.PUBLISHED)
         return await this.surveyAssignmentModel.insertMany(surveyAssignments)
     }
 }

@@ -7,6 +7,7 @@ import { CategoryModule } from './category/category.module';
 import { PaginationModule } from './pagination/pagination.module';
 import { FilteringModule } from './filtering/filtering.module';
 import { SurveyModule } from './survey/survey.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SurveyModule } from './survey/survey.module';
     PaginationModule,
     FilteringModule,
     SurveyModule,
+    AnalyticsModule
   ],
   controllers: [],
   providers: [],

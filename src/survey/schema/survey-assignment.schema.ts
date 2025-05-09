@@ -1,10 +1,11 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { SchemaTypes, Types } from 'mongoose';
 import { Survey } from './survey.schema';
+import { AnswersMap, QuestionAnswer } from '../types/answer.types';
 
 @Schema()
 export class SurveyAssignment {
-    
+
     @Prop({
         type: Object,
         required: true,
@@ -17,6 +18,12 @@ export class SurveyAssignment {
         required: true,
     })
     studentId: Types.ObjectId;
+
+    @Prop({
+        type: Map,
+        of: SchemaTypes.Mixed
+    })
+    answers?: AnswersMap;
 
     @Prop({ type: Date, default: Date.now })
     assignedAt?: Date;

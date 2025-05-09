@@ -1,12 +1,14 @@
-import { Body, Controller, Delete, Get, Inject, Param, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Inject, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
 import { SurveyRequestEntity } from "./dto/survey/survey.request-entity";
 import { SurveyService } from "./survey.service";
 import { PageOptionsDto } from "src/pagination/dto/page-options.dto";
 import { FilteringService } from "src/filtering/filtering.service";
 import { SurveyResponseEntity } from "./dto/survey/survey.response";
 import { plainToInstance } from "class-transformer";
+import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guars";
 
 @Controller('survey')
+@UseGuards(JwtAuthGuard)
 export class SurveyController {
 
     constructor(@Inject() private readonly surveyService: SurveyService, @Inject() private readonly filteringService: FilteringService) { }

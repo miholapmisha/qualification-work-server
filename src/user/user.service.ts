@@ -28,13 +28,13 @@ export class UserService {
     }
 
     async getUser(query: FilterQuery<User>) {
-        const user = await this.userModel.findOne(query)
-
+        const user = await this.userModel.findOne(query).populate('group')
+        
         if (!user) {
             throw new NotFoundException("User not found")
         }
 
-        return user
+        return user.toObject()
     }
 
     async updateUser(query: FilterQuery<User>, data: UpdateQuery<User>) {
@@ -42,6 +42,7 @@ export class UserService {
             new: true,
             lean: true
         })
+
         if (!updatedUser) {
             throw new NotFoundException("User not found")
         }
