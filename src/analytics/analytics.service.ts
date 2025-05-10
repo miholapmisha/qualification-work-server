@@ -4,39 +4,11 @@ import { CategoryType } from "src/category/schema/category.schema";
 import { SurveyAssignment } from "src/survey/schema/survey-assignment.schema";
 import { SurveyAssignmentService } from "src/survey/survey-assignment.service";
 import { SurveyService } from "src/survey/survey.service";
-import { AnswersMap, CheckboxGridAnswer, MultipleChoiceGridAnswer, QuestionAnswer } from "src/survey/types/answer.types";
+import { AnswersMap, CheckboxGridAnswer, MultipleChoiceGridAnswer } from "src/survey/types/answer.types";
 import { QuestionType } from "src/survey/types/question.types";
 import { User } from "src/user/schema/user.schema";
 import { UserService } from "src/user/user.service";
-
-class AnalyticsResult {
-    completed: number
-    uncompleted: number
-    questionsDistributions: QuestionDistibution[]
-}
-
-class QuestionDistibution {
-    questionId: string
-    answered: number
-    unanswered: number
-    analytics?: OptionDistribution[] | GridCheckboxAnalytics
-}
-
-class GridCheckboxAnalytics {
-    mostSelectedColumn?: { _id: string, selectedCount: number }
-    gridOptionsDistribution: GridOptionsDistribution[]
-}
-
-class OptionDistribution {
-    _id: string
-    percentage: number
-    selectedCount: number
-}
-
-class GridOptionsDistribution {
-    rowId: string;
-    rowOptionsDistribution: OptionDistribution[]
-}
+import { AnalyticsResult, OptionDistribution, GridCheckboxAnalytics, GridOptionsDistribution } from "./types/analytics.types";
 
 @Injectable()
 export class AnalyticsService {
@@ -52,8 +24,6 @@ export class AnalyticsService {
 
         const surveyToAnalyse = await this.surveyService.getSurvey({ _id: surveyId })
         const surveyAssignments = await this.getSurveyAssignments(surveyId, categoryId)
-
-        // console.log("Survey assignments questions: ", surveyAssignments.map(assignment => ({ answers: assignment.answers, studentId: assignment.studentId })))
 
         const questions = surveyToAnalyse.questions
         const answers = surveyAssignments.map(assignment => assignment.answers)
@@ -132,10 +102,16 @@ export class AnalyticsService {
                 return answer ? [answer] : [];
             });
 
-            textAnswersByQuestion[questionId] = collectedAnswers;
+            textAnswersByQuestion[questionId] = { questionText: question.questionText, collectedAnswers };
         });
 
-        return textAnswersByQuestion;
+
+
+        return Object.keys(textAnswersByQuestion).map(key => ({
+            _id: key,
+            questionText: textAnswersByQuestion[key].questionText,
+            answers: textAnswersByQuestion[key].collectedAnswers
+        }));
     }
 
     async getSurveyAssignments(surveyId: string, categoryId?: string) {

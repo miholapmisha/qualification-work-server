@@ -12,6 +12,7 @@ import { SurveyStatus } from "./schema/survey.schema";
 import { CategoryService } from "src/category/category.service";
 import { CategoryType } from "src/category/schema/category.schema";
 import { AnswersEntity } from "./dto/survey-assign/answers.request-entity";
+import { User } from "src/user/schema/user.schema";
 
 @Injectable()
 export class SurveyAssignmentService {
@@ -59,26 +60,27 @@ export class SurveyAssignmentService {
             ]
         })
 
-        const groupPaths = groupCategories.map(group => group.path);
-
-        const ancestorIds = new Set<string>();
-        groupPaths.forEach(path => {
-            if (path) {
-                const pathParts = path.split(this.categoryService.defaultPathSeparator);
-                pathParts.forEach(id => ancestorIds.add(id));
-            }
-        });
-
-        groupCategories.forEach(group => ancestorIds.add(group._id));
-
-        const validSelectedCategoryIds = surveyAssignment.assignCategoriesIds.filter(id =>
-            ancestorIds.has(id)
-        );
-
-        // console.log("Result length: ", validSelectedCategoryIds.length)
-        // console.log("Result: ", validSelectedCategoryIds)
-
         return await this.assignToUsersByGroup(surveyAssignment, groupCategories.map(category => category._id))
+    }
+
+    async getCategoriesByAssignment(surveyId: string) {
+
+        const surveyAssignments = await this.surveyAssignmentModel.find({ "survey._id": surveyId });
+        if (!surveyAssignments || surveyAssignments.length === 0) {
+            throw new NotFoundException("No survey assignments found for the given survey ID");
+        }
+
+        const studentIds = surveyAssignments.map((assignment) => assignment.studentId);
+        const users = (await this.userService.searchUsers({ _id: { $in: studentIds } })) as User[];
+        const groupIds = users.map((user) => user.groupId).filter((groupId) => groupId);
+
+        if (groupIds.length === 0) {
+            throw new NotFoundException("No groups found for the assigned students");
+        }
+
+        return await this.categoryService.getCategoriesTreeByChilds({
+            _id: { $in: groupIds }
+        });
     }
 
     async deleteSurveyAssigns(query: FilterQuery<SurveyAssignment>) {

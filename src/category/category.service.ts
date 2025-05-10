@@ -159,11 +159,8 @@ export class CategoryService {
         return await this.categoryModel.find(query)
     }
 
-    async getGroupCategoriesTree() {
-        const groupCategories = await this.categoryModel.find({
-            categoryType: CategoryType.GROUP
-        })
-
+    async getCategoriesTreeByChilds(query: FilterQuery<Category>) {
+        const groupCategories = await this.categoryModel.find(query)
 
         const groupPaths = groupCategories.map(group => group.path);
 
@@ -180,8 +177,50 @@ export class CategoryService {
             _id: { $in: Array.from(ancestorIds) }
         });
 
-        return allRelevantCategories;
+        return this.sortCategoriesHierarchically(allRelevantCategories);
     }
+
+    sortCategoriesHierarchically(categories: Category[]): Category[] {
+        if (!categories || categories.length === 0) {
+            return [];
+        }
+
+        const sortedCategories = [...categories];
+        const degreeOrder = {
+            "bachelor": 1,
+            "master": 2,
+            "ph.d": 3
+        };
+
+        sortedCategories.sort((a, b) => {
+            const pathA = a.path || '';
+            const pathB = b.path || '';
+
+            const segmentsA = pathA.split(this.defaultPathSeparator).filter(segment => segment.length > 0).length;
+            const segmentsB = pathB.split(this.defaultPathSeparator).filter(segment => segment.length > 0).length;
+
+            if (segmentsA !== segmentsB) {
+                return segmentsA - segmentsB;
+            }
+
+            if (a.categoryType === CategoryType.YEAR && b.categoryType === CategoryType.YEAR) {
+                const yearA = parseInt(a.name, 10) || 0;
+                const yearB = parseInt(b.name, 10) || 0;
+                return yearA - yearB;
+            }
+
+            if (a.categoryType === CategoryType.DEGREE && b.categoryType === CategoryType.DEGREE) {
+                const orderA = degreeOrder[a.name.toLowerCase()] || 999;
+                const orderB = degreeOrder[b.name.toLowerCase()] || 999;
+                return orderA - orderB;
+            }
+
+            return pathA.localeCompare(pathB);
+        });
+
+        return sortedCategories;
+    }
+
 
     async getCategories(query: FilterQuery<Category>) {
         return await this.categoryModel.find(query);

@@ -12,7 +12,7 @@ import { PageOptionsDto } from "src/pagination/dto/page-options.dto";
 import { FilteringService } from "src/filtering/filtering.service";
 
 @Controller('survey/assign')
-@UseGuards(JwtAuthGuard)
+// @UseGuards(JwtAuthGuard)
 export class SurveyAssignmentController {
 
     constructor(
@@ -38,6 +38,11 @@ export class SurveyAssignmentController {
             this.surveyAssignmentService.searchSurveyAssignments.bind(this.surveyAssignmentService),
             AssignmentResponse
         )
+    }
+
+    @Get('categories/:id')
+    async getCategoriesOfSurveyAssignment(@Param('id') surveyId: string) {
+        return await this.surveyAssignmentService.getCategoriesByAssignment(surveyId)
     }
 
     @Get('by-query')

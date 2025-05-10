@@ -4,6 +4,7 @@ import { CategoryService } from "./category.service";
 import { plainToInstance } from "class-transformer";
 import { CategoryResponse } from "./dto/category.response";
 import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guars";
+import { CategoryType } from "./schema/category.schema";
 
 @Controller('category')
 @UseGuards(JwtAuthGuard)
@@ -24,7 +25,7 @@ export class CategoryController {
 
     @Get('group-tree')
     async getGroupCategoriesTree() {
-        return await this.categoryService.getGroupCategoriesTree()
+        return await this.categoryService.getCategoriesTreeByChilds({ categoryType: CategoryType.GROUP })
     }
 
     @Delete()

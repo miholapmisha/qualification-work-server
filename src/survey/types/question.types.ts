@@ -1,3 +1,5 @@
+// Replace with classes 
+
 export enum QuestionType {
     MULTIPLE_CHOICE = 'multiple_choice',
     SINGLE_CHOICE = 'single_choice',
@@ -19,7 +21,7 @@ type TableRow = {
 export interface BaseQuestion {
     _id: string
     questionText?: string
-    type: QuestionType,
+    type: QuestionType
     required?: boolean
 }
 
