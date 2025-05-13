@@ -20,10 +20,10 @@ export class AnalyticsService {
         @Inject() private readonly userService: UserService,
     ) { }
 
-    async analyzeQuestions(surveyId: string, categoryId?: string) {
+    async analyzeQuestions(surveyId: string, groupIds?: string[]) {
 
         const surveyToAnalyse = await this.surveyService.getSurvey({ _id: surveyId })
-        const surveyAssignments = await this.getSurveyAssignments(surveyId, categoryId)
+        const surveyAssignments = await this.getSurveyAssignments(surveyId, groupIds)
 
         const questions = surveyToAnalyse.questions
         const answers = surveyAssignments.map(assignment => assignment.answers)
@@ -114,15 +114,13 @@ export class AnalyticsService {
         }));
     }
 
-    async getSurveyAssignments(surveyId: string, categoryId?: string) {
+    async getSurveyAssignments(surveyId: string, groupIds?: string[]) {
 
-        if (!categoryId) {
+        if (!groupIds?.length) {
             return await this.surveyAssignmentService.searchSurveyAssignments({ "survey._id": surveyId }) as SurveyAssignment[]
         }
 
-        const groupsWithParentIds = (await this.categoryService.getCategoriesByParentId({ parentId: categoryId, categoryType: CategoryType.GROUP }))
-            .map(category => category?._id)
-        const usersIds = (await this.userService.searchUsers({ groupId: { $in: groupsWithParentIds } }) as User[]).map(user => user._id)
+        const usersIds = (await this.userService.searchUsers({ groupId: { $in: groupIds } }) as User[]).map(user => user._id)
         return await this.surveyAssignmentService.searchSurveyAssignments({ "survey._id": surveyId, studentId: { $in: usersIds } }) as SurveyAssignment[]
     }
 

@@ -2,8 +2,6 @@ import { Controller, Inject, Post, Request, Res, UseGuards } from '@nestjs/commo
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthService } from './auth.service';
 import { JwtRefreshAuthGuard } from './guards/jwt-refresh-auth.guard';
-import { Response } from 'express';
-import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
 import { UserResponse } from 'src/user/dto/user.response';
 
@@ -11,8 +9,7 @@ import { UserResponse } from 'src/user/dto/user.response';
 export class AuthController {
 
     constructor(
-        private readonly authService: AuthService,
-        private readonly configService: ConfigService
+        private readonly authService: AuthService
     ) {}
 
     @Post('login')

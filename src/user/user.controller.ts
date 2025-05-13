@@ -8,6 +8,7 @@ import { CreateUserRequest } from "./dto/user.create-user-request";
 import { UpdateUserRequest } from "./dto/user.update-user-request";
 import { ValidationUserCredentialsInterceptor } from "./interceptors/validation-user-credentials.interceptor";
 import { FilteringService } from "src/filtering/filtering.service";
+import { hash } from "bcryptjs";
 
 
 @Controller('user')
@@ -32,7 +33,19 @@ export class UserController {
     @Put(':id')
     @UseInterceptors(ValidationUserCredentialsInterceptor)
     async updateUser(@Param('id') _id: string, @Body() user: UpdateUserRequest) {
-        return plainToInstance(UserResponse, await this.userService.updateUser({ _id }, { $set: user }))
+
+        return plainToInstance(
+            UserResponse,
+            await this.userService.updateUser(
+                { _id },
+                {
+                    $set: {
+                        ...user,
+                        password: user.password ? await hash(user.password, 10) : undefined
+                    }
+                }
+            )
+        )
     }
 
     @Get('current')

@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, Param, Query } from "@nestjs/common";
+import { Body, Controller, Get, Inject, Param, Post, Query } from "@nestjs/common";
 import { AnalyticsService } from "./analytics.service";
 import { SurveyAssignmentService } from "src/survey/survey-assignment.service";
 import { SurveyService } from "src/survey/survey.service";
@@ -17,21 +17,13 @@ export class AnalyticsController {
         return await this.analyticsService.getTextAnswers(surveyId)
     }
 
-    @Get(':id')
-    async getAnalytics(@Param('id') surveyId: string, @Query('categoryId') categoryId?: string) {
-
-        const survey = await this.surveyService.getSurvey({ _id: surveyId })
-        if (!categoryId) {
-            return {
-                survey,
-                categories: await this.surveyAssignmentService.getCategoriesByAssignment(surveyId),
-                analytics: await this.analyticsService.analyzeQuestions(surveyId)
-            }
-        }
+    @Post(':id')
+    async getAnalytics(@Param('id') surveyId: string, @Body() requestBody?: { groupsIds: string[] }) {
 
         return {
-            survey,
-            analytics: await this.analyticsService.analyzeQuestions(surveyId, categoryId)
+            survey: await this.surveyService.getSurvey({ _id: surveyId }),
+            categories: await this.surveyAssignmentService.getCategoriesByAssignment(surveyId),
+            analytics: await this.analyticsService.analyzeQuestions(surveyId, requestBody?.groupsIds)
         }
     }
 

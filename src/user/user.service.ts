@@ -10,7 +10,10 @@ import { PaginationService } from "src/pagination/pagination.service";
 @Injectable()
 export class UserService {
 
-    constructor(@InjectModel(User.name) private readonly userModel: Model<User>, @Inject() private readonly paginationService: PaginationService) { }
+    constructor(
+        @InjectModel(User.name) private readonly userModel: Model<User>,
+        @Inject() private readonly paginationService: PaginationService
+    ) { }
 
     async createUser(data: CreateUserRequest) {
         return await new this.userModel({
@@ -29,7 +32,7 @@ export class UserService {
 
     async getUser(query: FilterQuery<User>) {
         const user = await this.userModel.findOne(query).populate('group')
-        
+
         if (!user) {
             throw new NotFoundException("User not found")
         }
